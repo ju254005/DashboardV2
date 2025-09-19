@@ -172,7 +172,7 @@ export default function VehicleDashboardMap() {
     // ส่งข้อมูลไป Google Sheet
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbyEq68YxO5IZG45K9E-2s_jNS_BFk4__3xNdyCeTlBIuVkN5JwOOvbt-4z0egIDkMgH/exec",
+        "https://script.google.com/macros/s/AKfycbyeUA_a5wk4SBjD2_fcQUBsq86t68Whyubi2_OTzW-pmMNJ4rkxc7mLpBVpE7yGlXFo/exec",
         {
           method: "POST",
           mode: "cors",  // สำคัญ
