@@ -345,58 +345,62 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
             </div>
 
             {vehicles.map((v) => {
-              const placed = isCarPlaced(v.plate);
-              const selected = selectedCar === v.plate;
-              const reserving = reserveCar === v.plate;
+  const placed = isCarPlaced(v.plate);
+  const selected = selectedCar === v.plate;
+  const reserving = reserveCar === v.plate;
 
-              return (
-                <div
-                  key={v.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px',
-                    marginBottom: '6px',
-                    borderRadius: '6px',
-                    background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
-                    color: selected ? '#fff' : '#000',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                  }}
-                >
-                  <img
-  src={v.icon.options.iconUrl}
-  alt="car"
-  style={{ width: '35px' }}
-/>
-<span
-  style={sidebarPlateStyle(v.plate)}   // ✅ ไม่มี style= ซ้ำ
-  onClick={() => {
-    if (!placed) {
-      setSelectedCar(v.plate);
-      setReserveCar(null);
-    }
-  }}
->
-  {v.plate}
-</span>
-<button
-  style={sidebarReserveButtonStyle(v, '#ffc107')}   // ✅ ปุ่มจอง
-  onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
-  onMouseLeave={() => setHoveredButton(null)}
-  onClick={() => {
-    setSelectedCar(v.plate);
-    setReserveCar(v.plate);
-  }}
->
-  จอง
-</button>
-                </div>
-              );
-            })}
-          </>
-        )}
-      </div>
+  return (
+    <div
+      key={v.id}
+      style={{
+        display: 'flex',
+        flexDirection: windowWidth < 768 ? 'column' : 'row', // มือถือ column, desktop row
+        alignItems: 'center',
+        gap: '6px',
+        padding: '8px',
+        marginBottom: '6px',
+        borderRadius: '6px',
+        background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
+        color: selected ? '#fff' : '#000',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      }}
+    >
+      <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
+      <span
+        style={{
+          cursor: placed ? 'not-allowed' : 'pointer',
+          opacity: placed ? 0.5 : 1,
+          borderRadius: '4px',
+          padding: '2px 4px',
+        }}
+        onClick={() => {
+          if (!placed) {
+            setSelectedCar(v.plate);
+            setReserveCar(null);
+          }
+        }}
+      >
+        {v.plate}
+      </span>
+      <button
+        style={{
+          ...buttonStyle('reserve-' + v.id, '#ffc107'),
+          marginTop: windowWidth < 768 ? '4px' : '0px', // มือถือเว้นระยะบนป้ายทะเบียน
+          alignSelf: windowWidth < 768 ? 'flex-start' : 'auto', // มือถือให้ปุ่มอยู่ใต้ทะเบียน
+        }}
+        onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+        onMouseLeave={() => setHoveredButton(null)}
+        onClick={() => {
+          setSelectedCar(v.plate);
+          setReserveCar(v.plate);
+        }}
+      >
+        จอง
+      </button>
+    </div>
+  );
+})}
+
 
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
