@@ -169,14 +169,18 @@ export default function VehicleDashboardMap() {
     setCurrentDistrict(null);
     setShowDriverForm(false);
     try {
-      await fetch("https://script.google.com/macros/s/AKfycbyEq68YxO5IZG45K9E-2s_jNS_BFk4__3xNdyCeTlBIuVkN5JwOOvbt-4z0egIDkMgH/exec", {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbyEq68YxO5IZG45K9E-2s_jNS_BFk4__3xNdyCeTlBIuVkN5JwOOvbt-4z0egIDkMgH/exec", {
         method: "POST",
         body: JSON.stringify(newCar),
         headers: { "Content-Type": "application/json" },
       });
+    
+      const text = await res.text();
+      console.log("Google Sheet response:", text);
     } catch (err) {
       console.error("Google Sheet error:", err);
     }
+    
   };
 
   const removeCar = async (car) => {
