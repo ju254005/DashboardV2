@@ -175,15 +175,15 @@ export default function VehicleDashboardMap() {
         "https://script.google.com/macros/s/AKfycbyeUA_a5wk4SBjD2_fcQUBsq86t68Whyubi2_OTzW-pmMNJ4rkxc7mLpBVpE7yGlXFo/exec",
         {
           method: "POST",
-          mode: "cors",  // สำคัญ
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain;charset=utf-8" // สำคัญ
           },
           body: JSON.stringify(newCar)
         }
       );
   
-      const result = await response.json();
+      const text = await response.text();
+      const result = JSON.parse(text);
       console.log("Google Sheet result:", result);
   
     } catch (err) {
