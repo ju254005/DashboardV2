@@ -142,32 +142,40 @@ export default function VehicleDashboardMap() {
   
     const carObj = vehicles.find((v) => v.plate === selectedCar);
     const newCar = {
-      plate: carObj.plate,
-      x: currentDistrict.x,
-      y: currentDistrict.y,
-      district_id: currentDistrict.id,
-      district_name: currentDistrict.name,
       driver: driverInput,
+      plate: carObj.plate,
       date: driverDate,
-      reserved: reserveCar === selectedCar,
+      district_name: currentDistrict.name,
+      // reserved จะถูกใช้แค่ใน Supabase ไม่ต้องส่ง Google Sheet
     };
   
     // บันทึกใน Supabase
-    const { data, error } = await supabase
-      .from('assigned_cars')
-      .insert([newCar])
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from('assigned_cars')
+        .insert([{
+          ...newCar,
+          x: currentDistrict.x,
+          y: currentDistrict.y,
+          district_id: currentDistrict.id,
+          reserved: reserveCar === selectedCar,
+        }])
+        .select();
   
-    if (error) {
-      console.error(error);
+      if (error) {
+        console.error("Supabase error:", error);
+        return;
+      }
+  
+      setAssignedCars(prev => [...prev, ...data]);
+      setSelectedCar(null);
+      setReserveCar(null);
+      setCurrentDistrict(null);
+      setShowDriverForm(false);
+    } catch (err) {
+      console.error("Supabase error:", err);
       return;
     }
-  
-    setAssignedCars(prev => [...prev, ...data]);
-    setSelectedCar(null);
-    setReserveCar(null);
-    setCurrentDistrict(null);
-    setShowDriverForm(false);
   
     // ส่งข้อมูลไป Google Sheet
     try {
@@ -175,9 +183,8 @@ export default function VehicleDashboardMap() {
         "https://script.google.com/macros/s/AKfycbyeUA_a5wk4SBjD2_fcQUBsq86t68Whyubi2_OTzW-pmMNJ4rkxc7mLpBVpE7yGlXFo/exec",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8" // สำคัญ
-          },
+          mode: "cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(newCar)
         }
       );
@@ -185,11 +192,11 @@ export default function VehicleDashboardMap() {
       const text = await response.text();
       const result = JSON.parse(text);
       console.log("Google Sheet result:", result);
-  
     } catch (err) {
       console.error("Google Sheet error:", err);
     }
   };
+  
   
   
 
