@@ -62,6 +62,33 @@ export default function VehicleDashboardMap() {
   const [replaceModal, setReplaceModal] = useState(null);
   const [removeModal, setRemoveModal] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
+  
+  // ✅ Responsive สำหรับป้ายทะเบียนใน Sidebar
+const sidebarPlateStyle = (plate) => ({
+  flex: 1,
+  cursor: isCarPlaced(plate) ? 'not-allowed' : 'pointer',
+  opacity: isCarPlaced(plate) ? 0.5 : 1,
+  borderRadius: '4px',
+  padding: window.innerWidth < 768 ? '4px 6px' : '6px 8px',
+  fontSize: window.innerWidth < 768 ? '12px' : '14px',
+});
+
+// ✅ Responsive สำหรับปุ่ม "จอง" ใน Sidebar
+const sidebarReserveButtonStyle = (car, baseColor) => ({
+  padding: window.innerWidth < 768 ? '6px 10px' : '8px 14px',
+  fontSize: window.innerWidth < 768 ? '12px' : '14px',
+  borderRadius: '6px',
+  border: 'none',
+  background: baseColor,
+  color: '#fff',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  transform: hoveredButton === 'reserve-' + car.id ? 'scale(1.05)' : 'scale(1)',
+  boxShadow:
+    hoveredButton === 'reserve-' + car.id
+      ? '0 4px 12px rgba(0,0,0,0.25)'
+      : '0 2px 6px rgba(0,0,0,0.15)',
+});
 
   // Responsive Sidebar
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -337,35 +364,33 @@ export default function VehicleDashboardMap() {
                     boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                   }}
                 >
-                  <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
-                  <span
-                    style={{
-                      flex: 1,
-                      cursor: placed ? 'not-allowed' : 'pointer',
-                      opacity: placed ? 0.5 : 1,
-                      borderRadius: '4px',
-                      padding: '2px 4px',
-                    }}
-                    onClick={() => {
-                      if (!placed) {
-                        setSelectedCar(v.plate);
-                        setReserveCar(null);
-                      }
-                    }}
-                  >
-                    {v.plate}
-                  </span>
-                  <button
-                    style={buttonStyle('reserve-' + v.id, '#ffc107')}
-                    onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
-                    onMouseLeave={() => setHoveredButton(null)}
-                    onClick={() => {
-                      setSelectedCar(v.plate);
-                      setReserveCar(v.plate);
-                    }}
-                  >
-                    จอง
-                  </button>
+                  <img
+  src={v.icon.options.iconUrl}
+  alt="car"
+  style={{ width: '35px' }}
+/>
+<span
+  style={sidebarPlateStyle(v.plate)}   // ✅ ไม่มี style= ซ้ำ
+  onClick={() => {
+    if (!placed) {
+      setSelectedCar(v.plate);
+      setReserveCar(null);
+    }
+  }}
+>
+  {v.plate}
+</span>
+<button
+  style={sidebarReserveButtonStyle(v, '#ffc107')}   // ✅ ปุ่มจอง
+  onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+  onMouseLeave={() => setHoveredButton(null)}
+  onClick={() => {
+    setSelectedCar(v.plate);
+    setReserveCar(v.plate);
+  }}
+>
+  จอง
+</button>
                 </div>
               );
             })}
