@@ -63,6 +63,18 @@ export default function VehicleDashboardMap() {
   const [removeModal, setRemoveModal] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
 
+  // Responsive Sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
   const vehicles = [
     { id: 'v1', plate: 'นก 723 บึงกาฬ', icon: carIcons[0] },
     { id: 'v2', plate: 'กข 3279 บึงกาฬ', icon: carIcons[1] },
@@ -85,6 +97,15 @@ export default function VehicleDashboardMap() {
     getActiveCars().filter((c) => c.district_id === districtId);
   const isCarPlaced = (plate) =>
     getActiveCars().some((c) => c.plate === plate && !c.reserved);
+
+  
+
+     // Sidebar width responsive
+  const sidebarWidth = sidebarOpen
+  ? windowWidth < 768
+    ? '100px'
+    : '300px'
+  : '0px';
 
   useEffect(() => {
     const deleteOldCarsAndFetch = async () => {
@@ -245,105 +266,111 @@ export default function VehicleDashboardMap() {
         : '0 2px 6px rgba(0,0,0,0.15)',
   });
 
+  // -------------------------
+  // Render
+  // -------------------------
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        fontFamily: 'Arial,sans-serif',
-        background: '#fdf6e3',
-      }}
-    >
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Arial,sans-serif', background: '#fdf6e3' }}>
+      
       {/* Sidebar */}
       <div
         style={{
-          width: '300px',
-          padding: '10px',
-          borderRight: '1px solid #ccc',
+          width: sidebarWidth,
+          transition: 'width 0.3s',
+          overflow: 'hidden',
+          borderRight: sidebarOpen ? '1px solid #ccc' : 'none',
           background: '#fff8e1',
-          overflowY: 'auto',
+          padding: sidebarOpen ? '10px' : '0px',
         }}
       >
-        <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>
-          🚗 รายการรถ
-        </h3>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '10px',
-          }}
-        >
-          <button
-            style={buttonStyle('showStatus', '#17a2b8')}
-            onMouseEnter={() => setHoveredButton('showStatus')}
-            onMouseLeave={() => setHoveredButton(null)}
-            onClick={() => setShowAllStatus(!showAllStatus)}
-          >
-            {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
-          </button>
-        </div>
+        {/* ปุ่มย่อ/ขยาย */}
+<button
+  onClick={() => setSidebarOpen(!sidebarOpen)}
+  style={{
+    position: 'absolute',      // อยู่เหนือ layout หลัก
+    top: 10,
+    left: sidebarOpen ? 310 : 10, // เลื่อนตาม sidebar
+    zIndex: 2000,
+    padding: '6px 10px',
+    borderRadius: '4px',
+    background: '#007bff',
+    color: '#fff',
+    border: 'none',
+    cursor: 'pointer',
+  }}
+>
+  {sidebarOpen ? '◀' : '▶'}
+</button>
 
-        {vehicles.map((v) => {
-          const placed = isCarPlaced(v.plate);
-          const selected = selectedCar === v.plate;
-          const reserving = reserveCar === v.plate;
+        {sidebarOpen && (
+          <>
+            <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>🚗 รายการรถ</h3>
 
-          return (
-            <div
-              key={v.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px',
-                marginBottom: '6px',
-                borderRadius: '6px',
-                background: selected
-                  ? reserving
-                    ? '#ffc107'
-                    : '#007bff'
-                  : '#fff',
-                color: selected ? '#fff' : '#000',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-              }}
-            >
-              <img
-                src={v.icon.options.iconUrl}
-                alt="car"
-                style={{ width: '35px' }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  cursor: placed ? 'not-allowed' : 'pointer',
-                  opacity: placed ? 0.5 : 1,
-                  borderRadius: '4px',
-                  padding: '2px 4px',
-                }}
-                onClick={() => {
-                  if (!placed) {
-                    setSelectedCar(v.plate);
-                    setReserveCar(null);
-                  }
-                }}
-              >
-                {v.plate}
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
               <button
-                style={buttonStyle('reserve-' + v.id, '#ffc107')}
-                onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+                style={buttonStyle('showStatus', '#17a2b8')}
+                onMouseEnter={() => setHoveredButton('showStatus')}
                 onMouseLeave={() => setHoveredButton(null)}
-                onClick={() => {
-                  setSelectedCar(v.plate);
-                  setReserveCar(v.plate);
-                }}
+                onClick={() => setShowAllStatus(!showAllStatus)}
               >
-                จอง
+                {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
               </button>
             </div>
-          );
-        })}
+
+            {vehicles.map((v) => {
+              const placed = isCarPlaced(v.plate);
+              const selected = selectedCar === v.plate;
+              const reserving = reserveCar === v.plate;
+
+              return (
+                <div
+                  key={v.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
+                    color: selected ? '#fff' : '#000',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
+                  <span
+                    style={{
+                      flex: 1,
+                      cursor: placed ? 'not-allowed' : 'pointer',
+                      opacity: placed ? 0.5 : 1,
+                      borderRadius: '4px',
+                      padding: '2px 4px',
+                    }}
+                    onClick={() => {
+                      if (!placed) {
+                        setSelectedCar(v.plate);
+                        setReserveCar(null);
+                      }
+                    }}
+                  >
+                    {v.plate}
+                  </span>
+                  <button
+                    style={buttonStyle('reserve-' + v.id, '#ffc107')}
+                    onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+                    onMouseLeave={() => setHoveredButton(null)}
+                    onClick={() => {
+                      setSelectedCar(v.plate);
+                      setReserveCar(v.plate);
+                    }}
+                  >
+                    จอง
+                  </button>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       {/* Map */}
@@ -359,74 +386,29 @@ export default function VehicleDashboardMap() {
             zIndex: 1500,
           }}
         />
-        <MapContainer
-          center={[500, 500]}
-          zoom={0}
-          crs={L.CRS.Simple}
-          style={{ height: '100%', width: '100%', background: '#fdf6e3' }}
-        >
+        <MapContainer center={[500, 500]} zoom={0} crs={L.CRS.Simple} style={{ height: '100%', width: '100%' }}>
           <ImageOverlay url={mapImg} bounds={bounds} />
+          {/* Markers */}
           {districts.map((d) => {
             const carsHere = getCarsInDistrict(d.id);
-            const position =
-              carsHere.length > 0 ? [carsHere[0].x, carsHere[0].y] : [d.x, d.y];
-            const icon =
-              carsHere.length > 0
-                ? vehicles.find((v) => v.plate === carsHere[0].plate)?.icon ||
-                  flagLeafletIcon
-                : flagLeafletIcon;
+            const position = carsHere.length > 0 ? [carsHere[0].x, carsHere[0].y] : [d.x, d.y];
+            const icon = carsHere.length > 0 ? vehicles.find((v) => v.plate === carsHere[0].plate)?.icon || flagLeafletIcon : flagLeafletIcon;
 
             return (
-              <Marker
-                key={d.id + (showAllStatus ? '-show' : '')}
-                position={position}
-                icon={icon}
-                eventHandlers={{ click: () => handleDistrictClick(d) }}
-              >
-                <Tooltip
-                  direction="top"
-                  offset={[0, -10]}
-                  permanent={showAllStatus}
-                  opacity={1}
-                >
-                  <div
-                    style={{
-                      minWidth: '120px',
-                      background: '#fff',
-                      padding: '2px 4px',
-                      borderRadius: '4px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }}
-                  >
+              <Marker key={d.id + (showAllStatus ? '-show' : '')} position={position} icon={icon} eventHandlers={{ click: () => handleDistrictClick(d) }}>
+                <Tooltip direction="top" offset={[0, -10]} permanent={showAllStatus} opacity={1}>
+                  <div style={{ minWidth: '120px', background: '#fff', padding: '2px 4px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                     <strong>{d.name}</strong>
                     {carsHere.length === 0 ? (
-                      <div style={{ marginTop: '4px', color: '#555' }}>
-                        ไม่มีรถในขณะนี้
-                      </div>
+                      <div style={{ marginTop: '4px', color: '#555' }}>ไม่มีรถในขณะนี้</div>
                     ) : (
                       carsHere.map((c, i) => {
-                        const color = c.reserved
-                          ? '#ffc107'
-                          : placedColors[i % placedColors.length];
+                        const color = c.reserved ? '#ffc107' : placedColors[i % placedColors.length];
                         return (
-                          <div
-                            key={i}
-                            style={{
-                              marginTop: '3px',
-                              color,
-                              fontWeight: c.reserved ? 'normal' : 'bold',
-                            }}
-                          >
+                          <div key={i} style={{ marginTop: '3px', color, fontWeight: c.reserved ? 'normal' : 'bold' }}>
                             {c.plate} ({c.driver})<br />
-                            <span style={{ fontSize: '10px', color: '#333' }}>
-                              วันที่: {c.date}
-                            </span>
-                            {c.reserved && (
-                              <span style={{ fontSize: '10px', color: '#555' }}>
-                                {' '}
-                                (จอง)
-                              </span>
-                            )}
+                            <span style={{ fontSize: '10px', color: '#333' }}>วันที่: {c.date}</span>
+                            {c.reserved && <span style={{ fontSize: '10px', color: '#555' }}> (จอง)</span>}
                           </div>
                         );
                       })
