@@ -62,6 +62,8 @@ export default function VehicleDashboardMap() {
   const [replaceModal, setReplaceModal] = useState(null);
   const [removeModal, setRemoveModal] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   const vehicles = [
     { id: 'v1', plate: 'นก 723 บึงกาฬ', icon: carIcons[0] },
@@ -254,97 +256,90 @@ export default function VehicleDashboardMap() {
         background: '#fdf6e3',
       }}
     >
-      {/* Sidebar */}
+
+     {/* Sidebar */}
+<div
+  className={`fixed top-0 left-0 h-full bg-[#fff8e1] z-50 p-2 overflow-y-auto transition-transform transform 
+    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-72`}
+>
+  <h3 className="text-center mb-2">🚗 รายการรถ</h3>
+
+  <div className="flex justify-center mb-2">
+    <button
+      style={buttonStyle('showStatus', '#17a2b8')}
+      onMouseEnter={() => setHoveredButton('showStatus')}
+      onMouseLeave={() => setHoveredButton(null)}
+      onClick={() => setShowAllStatus(!showAllStatus)}
+    >
+      {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
+    </button>
+  </div>
+
+  {vehicles.map((v) => {
+    const placed = isCarPlaced(v.plate);
+    const selected = selectedCar === v.plate;
+    const reserving = reserveCar === v.plate;
+
+    return (
       <div
-        style={{
-          width: '300px',
-          padding: '10px',
-          borderRight: '1px solid #ccc',
-          background: '#fff8e1',
-          overflowY: 'auto',
-        }}
+        key={v.id}
+        className={`flex items-center gap-2 p-2 mb-1 rounded shadow
+          ${selected ? (reserving ? 'bg-yellow-400' : 'bg-blue-600 text-white') : 'bg-white'}
+        `}
       >
-        <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>
-          🚗 รายการรถ
-        </h3>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '10px',
+        <img src={v.icon.options.iconUrl} alt="car" className="w-9" />
+        <span
+          className={`flex-1 rounded p-1 ${placed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          onClick={() => {
+            if (!placed) {
+              setSelectedCar(v.plate);
+              setReserveCar(null);
+            }
           }}
         >
-          <button
-            style={buttonStyle('showStatus', '#17a2b8')}
-            onMouseEnter={() => setHoveredButton('showStatus')}
-            onMouseLeave={() => setHoveredButton(null)}
-            onClick={() => setShowAllStatus(!showAllStatus)}
-          >
-            {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
-          </button>
-        </div>
-
-        {vehicles.map((v) => {
-          const placed = isCarPlaced(v.plate);
-          const selected = selectedCar === v.plate;
-          const reserving = reserveCar === v.plate;
-
-          return (
-            <div
-              key={v.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px',
-                marginBottom: '6px',
-                borderRadius: '6px',
-                background: selected
-                  ? reserving
-                    ? '#ffc107'
-                    : '#007bff'
-                  : '#fff',
-                color: selected ? '#fff' : '#000',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-              }}
-            >
-              <img
-                src={v.icon.options.iconUrl}
-                alt="car"
-                style={{ width: '35px' }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  cursor: placed ? 'not-allowed' : 'pointer',
-                  opacity: placed ? 0.5 : 1,
-                  borderRadius: '4px',
-                  padding: '2px 4px',
-                }}
-                onClick={() => {
-                  if (!placed) {
-                    setSelectedCar(v.plate);
-                    setReserveCar(null);
-                  }
-                }}
-              >
-                {v.plate}
-              </span>
-              <button
-                style={buttonStyle('reserve-' + v.id, '#ffc107')}
-                onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
-                onMouseLeave={() => setHoveredButton(null)}
-                onClick={() => {
-                  setSelectedCar(v.plate);
-                  setReserveCar(v.plate);
-                }}
-              >
-                จอง
-              </button>
-            </div>
-          );
-        })}
+          {v.plate}
+        </span>
+        <button
+          style={buttonStyle('reserve-' + v.id, '#ffc107')}
+          onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+          onMouseLeave={() => setHoveredButton(null)}
+          onClick={() => {
+            setSelectedCar(v.plate);
+            setReserveCar(v.plate);
+          }}
+        >
+          จอง
+        </button>
       </div>
+    );
+  })}
+</div>
+
+{/* Hamburger Button */}
+<div className="md:hidden p-2">
+  <button
+    onClick={() => setSidebarOpen(!sidebarOpen)}
+    style={{
+      fontSize: '24px',
+      padding: '8px',
+      border: 'none',
+      background: '#007bff',
+      color: '#fff',
+      borderRadius: '4px',
+    }}
+  >
+    ☰
+  </button>
+</div>
+
+{/* Hamburger & Overlay */}
+{sidebarOpen && (
+  <div
+    className="fixed inset-0 bg-black opacity-30 z-40 md:hidden"
+    onClick={() => setSidebarOpen(false)}
+  />
+)}
+
 
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
