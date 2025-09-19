@@ -169,7 +169,7 @@ export default function VehicleDashboardMap() {
     setCurrentDistrict(null);
     setShowDriverForm(false);
     try {
-      await fetch("https://script.google.com/macros/s/AKfycbx9lbTEIqeYIJH87H9RpbLveIGr6zkMX51QzyRfvMPzqhqpebigPl2SUx22jqc7XEVs/exec", {
+      await fetch("https://script.google.com/macros/s/AKfycbw54oMzhrtfZNjAVA414OhvwZmPRSACipkuMRAiRgY23u2Hu_HbcrzoiVzEhiALKnId/exec", {
         method: "POST",
         body: JSON.stringify(newCar),
         headers: { "Content-Type": "application/json" },
