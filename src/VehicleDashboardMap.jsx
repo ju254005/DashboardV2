@@ -138,9 +138,8 @@ export default function VehicleDashboardMap() {
   };
 
   const submitDriverForm = async () => {
-    // ตรวจสอบค่าอีกครั้ง
     if (!driverInput || !driverDate) return;
-
+  
     const carObj = vehicles.find((v) => v.plate === selectedCar);
     const newCar = {
       plate: carObj.plate,
@@ -149,39 +148,50 @@ export default function VehicleDashboardMap() {
       district_id: currentDistrict.id,
       district_name: currentDistrict.name,
       driver: driverInput,
-      date: driverDate, // ใช้ค่า state โดยตรง
+      date: driverDate,
       reserved: reserveCar === selectedCar,
     };
-
+  
+    // บันทึกใน Supabase
     const { data, error } = await supabase
       .from('assigned_cars')
       .insert([newCar])
-      .select(); // select() เพื่อให้ return object พร้อม id
-
+      .select();
+  
     if (error) {
       console.error(error);
       return;
     }
-
-    setAssignedCars((prev) => [...prev, ...data]);
+  
+    setAssignedCars(prev => [...prev, ...data]);
     setSelectedCar(null);
     setReserveCar(null);
     setCurrentDistrict(null);
     setShowDriverForm(false);
+  
+    // ส่งข้อมูลไป Google Sheet
     try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbyEq68YxO5IZG45K9E-2s_jNS_BFk4__3xNdyCeTlBIuVkN5JwOOvbt-4z0egIDkMgH/exec", {
-        method: "POST",
-        body: JSON.stringify(newCar),
-        headers: { "Content-Type": "application/json" },
-      });
-    
-      const text = await res.text();
-      console.log("Google Sheet response:", text);
+      const response = await fetch(
+        "https://script.google.com/macros/s/AKfycbyEq68YxO5IZG45K9E-2s_jNS_BFk4__3xNdyCeTlBIuVkN5JwOOvbt-4z0egIDkMgH/exec",
+        {
+          method: "POST",
+          mode: "cors",  // สำคัญ
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(newCar)
+        }
+      );
+  
+      const result = await response.json();
+      console.log("Google Sheet result:", result);
+  
     } catch (err) {
       console.error("Google Sheet error:", err);
     }
-    
   };
+  
+  
 
   const removeCar = async (car) => {
     const { error } = await supabase
