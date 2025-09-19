@@ -140,13 +140,12 @@ export default function VehicleDashboardMap() {
   const submitDriverForm = async () => {
     if (!driverInput || !driverDate) return;
   
-    const carObj = vehicles.find((v) => v.plate === selectedCar);
+    const carObj = vehicles.find(v => v.plate === selectedCar);
     const newCar = {
       driver: driverInput,
       plate: carObj.plate,
       date: driverDate,
-      district_name: currentDistrict.name,
-      // reserved จะถูกใช้แค่ใน Supabase ไม่ต้องส่ง Google Sheet
+      district_name: currentDistrict.name
     };
   
     // บันทึกใน Supabase
@@ -158,7 +157,7 @@ export default function VehicleDashboardMap() {
           x: currentDistrict.x,
           y: currentDistrict.y,
           district_id: currentDistrict.id,
-          reserved: reserveCar === selectedCar,
+          reserved: reserveCar === selectedCar
         }])
         .select();
   
@@ -192,6 +191,7 @@ export default function VehicleDashboardMap() {
       const text = await response.text();
       const result = JSON.parse(text);
       console.log("Google Sheet result:", result);
+  
     } catch (err) {
       console.error("Google Sheet error:", err);
     }
