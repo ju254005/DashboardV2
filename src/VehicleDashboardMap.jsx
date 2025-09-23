@@ -62,35 +62,8 @@ export default function VehicleDashboardMap() {
   const [replaceModal, setReplaceModal] = useState(null);
   const [removeModal, setRemoveModal] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
-  
-  // ✅ Responsive สำหรับป้ายทะเบียนใน Sidebar
-const sidebarPlateStyle = (plate) => ({
-  flex: 1,
-  cursor: isCarPlaced(plate) ? 'not-allowed' : 'pointer',
-  opacity: isCarPlaced(plate) ? 0.5 : 1,
-  borderRadius: '4px',
-  padding: window.innerWidth < 768 ? '4px 6px' : '6px 8px',
-  fontSize: window.innerWidth < 768 ? '12px' : '14px',
-});
-
-// ✅ Responsive สำหรับปุ่ม "จอง" ใน Sidebar
-const sidebarReserveButtonStyle = (car, baseColor) => ({
-  padding: window.innerWidth < 768 ? '6px 10px' : '8px 14px',
-  fontSize: window.innerWidth < 768 ? '12px' : '14px',
-  borderRadius: '6px',
-  border: 'none',
-  background: baseColor,
-  color: '#fff',
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  transform: hoveredButton === 'reserve-' + car.id ? 'scale(1.05)' : 'scale(1)',
-  boxShadow:
-    hoveredButton === 'reserve-' + car.id
-      ? '0 4px 12px rgba(0,0,0,0.25)'
-      : '0 2px 6px rgba(0,0,0,0.15)',
-});
-
-  // Responsive Sidebar
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -100,8 +73,6 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   const vehicles = [
     { id: 'v1', plate: 'นก 723 บึงกาฬ', icon: carIcons[0] },
     { id: 'v2', plate: 'กข 3279 บึงกาฬ', icon: carIcons[1] },
@@ -110,6 +81,12 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
     { id: 'v5', plate: '2ขฆ 6814 กทม', icon: carIcons[4] },
     { id: 'v6', plate: '5ขฬ 1041 กทม', icon: carIcons[4] },
   ];
+
+  const sidebarWidth = sidebarOpen
+    ? windowWidth < 768
+      ? '100px'
+      : '300px'
+    : '0px';
 
   const getActiveCars = () => {
     const today = new Date();
@@ -122,27 +99,29 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
 
   const getCarsInDistrict = (districtId) =>
     getActiveCars().filter((c) => c.district_id === districtId);
+
   const isCarPlaced = (plate) =>
     getActiveCars().some((c) => c.plate === plate && !c.reserved);
 
-  
-
-     // Sidebar width responsive
-  const sidebarWidth = sidebarOpen
-  ? windowWidth < 768
-    ? '100px'
-    : '300px'
-  : '0px';
+  const buttonStyle = (key, baseColor) => ({
+    padding: '10px',
+    borderRadius: '6px',
+    border: 'none',
+    background: baseColor,
+    color: '#fff',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    transform: hoveredButton === key ? 'scale(1.05)' : 'scale(1)',
+    boxShadow:
+      hoveredButton === key ? '0 4px 12px rgba(0,0,0,0.3)' : '0 2px 6px rgba(0,0,0,0.15)',
+  });
 
   useEffect(() => {
     const deleteOldCarsAndFetch = async () => {
       try {
         const today = new Date();
-        const yesterdayISO = new Date(
-          today.getTime() - 24 * 60 * 60 * 1000
-        ).toISOString();
+        const yesterdayISO = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
-        // ลบรถเก่าที่ date น้อยกว่าหนึ่งวัน
         const { error: deleteError } = await supabase
           .from('assigned_cars')
           .delete()
@@ -150,10 +129,7 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
 
         if (deleteError) console.error('ลบรถเก่าไม่สำเร็จ:', deleteError);
 
-        // ดึงข้อมูลหลังลบ
-        const { data, error: fetchError } = await supabase
-          .from('assigned_cars')
-          .select('*');
+        const { data, error: fetchError } = await supabase.from('assigned_cars').select('*');
 
         if (fetchError) console.error('ดึงข้อมูลรถไม่สำเร็จ:', fetchError);
         else setAssignedCars(data);
@@ -187,73 +163,64 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
 
   const submitDriverForm = async () => {
     if (!driverInput || !driverDate) return;
-  
-    const carObj = vehicles.find(v => v.plate === selectedCar);
+
+    const carObj = vehicles.find((v) => v.plate === selectedCar);
     const newCar = {
       driver: driverInput,
       plate: carObj.plate,
       date: driverDate,
-      district_name: currentDistrict.name
+      district_name: currentDistrict.name,
     };
-  
-    // บันทึกใน Supabase
+
     try {
       const { data, error } = await supabase
         .from('assigned_cars')
-        .insert([{
-          ...newCar,
-          x: currentDistrict.x,
-          y: currentDistrict.y,
-          district_id: currentDistrict.id,
-          reserved: reserveCar === selectedCar
-        }])
+        .insert([
+          {
+            ...newCar,
+            x: currentDistrict.x,
+            y: currentDistrict.y,
+            district_id: currentDistrict.id,
+            reserved: reserveCar === selectedCar,
+          },
+        ])
         .select();
-  
+
       if (error) {
-        console.error("Supabase error:", error);
+        console.error('Supabase error:', error);
         return;
       }
-  
-      setAssignedCars(prev => [...prev, ...data]);
+
+      setAssignedCars((prev) => [...prev, ...data]);
       setSelectedCar(null);
       setReserveCar(null);
       setCurrentDistrict(null);
       setShowDriverForm(false);
     } catch (err) {
-      console.error("Supabase error:", err);
+      console.error('Supabase error:', err);
       return;
     }
-  
-    // ส่งข้อมูลไป Google Sheet
+
     try {
       const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbyeUA_a5wk4SBjD2_fcQUBsq86t68Whyubi2_OTzW-pmMNJ4rkxc7mLpBVpE7yGlXFo/exec",
+        'https://script.google.com/macros/s/AKfycbyeUA_a5wk4SBjD2_fcQUBsq86t68Whyubi2_OTzW-pmMNJ4rkxc7mLpBVpE7yGlXFo/exec',
         {
-          method: "POST",
-          mode: "cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(newCar)
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(newCar),
         }
       );
-  
       const text = await response.text();
       const result = JSON.parse(text);
-      console.log("Google Sheet result:", result);
-  
+      console.log('Google Sheet result:', result);
     } catch (err) {
-      console.error("Google Sheet error:", err);
+      console.error('Google Sheet error:', err);
     }
   };
-  
-  
-  
 
   const removeCar = async (car) => {
-    const { error } = await supabase
-      .from('assigned_cars')
-      .delete()
-      .eq('id', car.id);
-
+    const { error } = await supabase.from('assigned_cars').delete().eq('id', car.id);
     if (!error) {
       setAssignedCars((prev) => prev.filter((c) => c.id !== car.id));
       setRemoveModal(null);
@@ -264,73 +231,48 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
   };
 
   const replaceCar = async (oldCar, newCarPlate) => {
-    // ลบคันเก่า
     await supabase.from('assigned_cars').delete().eq('id', oldCar.id);
-
-    // เปิดฟอร์มเพิ่มคันใหม่
     setSelectedCar(newCarPlate);
     setReplaceModal(null);
-    setCurrentDistrict(
-      oldCar.district_id
-        ? districts.find((d) => d.id === oldCar.district_id)
-        : null
-    );
+    setCurrentDistrict(districts.find((d) => d.id === oldCar.district_id) || null);
     setShowDriverForm(true);
   };
 
-  const buttonStyle = (key, baseColor) => ({
-    padding: '10px',
-    borderRadius: '6px',
-    border: 'none',
-    background: baseColor,
-    color: '#fff',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    transform: hoveredButton === key ? 'scale(1.05)' : 'scale(1)',
-    boxShadow:
-      hoveredButton === key
-        ? '0 4px 12px rgba(0,0,0,0.3)'
-        : '0 2px 6px rgba(0,0,0,0.15)',
-  });
-
-  // -------------------------
-  // Render
-  // -------------------------
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Arial,sans-serif', background: '#fdf6e3' }}>
-      
       {/* Sidebar */}
       <div
-        style={{
-          width: sidebarWidth,
-          transition: 'width 0.3s',
-          overflow: 'hidden',
-          borderRight: sidebarOpen ? '1px solid #ccc' : 'none',
-          background: '#fff8e1',
-          padding: sidebarOpen ? '10px' : '0px',
-        }}
-      >
-        {/* ปุ่มย่อ/ขยาย */}
-<button
-  onClick={() => setSidebarOpen(!sidebarOpen)}
   style={{
-    position: 'absolute',      // อยู่เหนือ layout หลัก
-    top: 10,
-    left: sidebarOpen ? 310 : 10, // เลื่อนตาม sidebar
-    zIndex: 2000,
-    padding: '6px 10px',
-    borderRadius: '4px',
-    background: '#007bff',
-    color: '#fff',
-    border: 'none',
-    cursor: 'pointer',
+    width: sidebarWidth,
+    transition: 'width 0.3s',
+    overflowY: 'auto', // ให้ scroll แนวตั้ง
+    maxHeight: '100vh', // ไม่ให้เกินหน้าจอ
+    borderRight: sidebarOpen ? '1px solid #ccc' : 'none',
+    background: '#fff8e1',
+    padding: sidebarOpen ? '10px' : '0px',
   }}
 >
-  {sidebarOpen ? '◀' : '▶'}
-</button>
+
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{
+            position: 'absolute',
+            top: 10,
+            left: sidebarOpen ? 310 : 10,
+            zIndex: 2000,
+            padding: '6px 10px',
+            borderRadius: '4px',
+            background: '#007bff',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {sidebarOpen ? '◀' : '▶'}
+        </button>
 
         {sidebarOpen && (
-          <>
+          <div>
             <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>🚗 รายการรถ</h3>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
@@ -345,62 +287,64 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
             </div>
 
             {vehicles.map((v) => {
-  const placed = isCarPlaced(v.plate);
-  const selected = selectedCar === v.plate;
-  const reserving = reserveCar === v.plate;
+              const placed = isCarPlaced(v.plate);
+              const selected = selectedCar === v.plate;
+              const reserving = reserveCar === v.plate;
 
-  return (
-    <div
-      key={v.id}
-      style={{
-        display: 'flex',
-        flexDirection: windowWidth < 768 ? 'column' : 'row', // มือถือ column, desktop row
-        alignItems: 'center',
-        gap: '6px',
-        padding: '8px',
-        marginBottom: '6px',
-        borderRadius: '6px',
-        background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
-        color: selected ? '#fff' : '#000',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-      }}
-    >
-      <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
-      <span
-        style={{
-          cursor: placed ? 'not-allowed' : 'pointer',
-          opacity: placed ? 0.5 : 1,
-          borderRadius: '4px',
-          padding: '2px 4px',
-        }}
-        onClick={() => {
-          if (!placed) {
-            setSelectedCar(v.plate);
-            setReserveCar(null);
-          }
-        }}
-      >
-        {v.plate}
-      </span>
-      <button
-        style={{
-          ...buttonStyle('reserve-' + v.id, '#ffc107'),
-          marginTop: windowWidth < 768 ? '4px' : '0px', // มือถือเว้นระยะบนป้ายทะเบียน
-          alignSelf: windowWidth < 768 ? 'flex-start' : 'auto', // มือถือให้ปุ่มอยู่ใต้ทะเบียน
-        }}
-        onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
-        onMouseLeave={() => setHoveredButton(null)}
-        onClick={() => {
-          setSelectedCar(v.plate);
-          setReserveCar(v.plate);
-        }}
-      >
-        จอง
-      </button>
-    </div>
-  );
-})}
-
+              return (
+                <div
+                  key={v.id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: windowWidth < 768 ? 'column' : 'row',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
+                    color: selected ? '#fff' : '#000',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
+                  <span
+                    style={{
+                      cursor: placed ? 'not-allowed' : 'pointer',
+                      opacity: placed ? 0.5 : 1,
+                      borderRadius: '4px',
+                      padding: '2px 4px',
+                    }}
+                    onClick={() => {
+                      if (!placed) {
+                        setSelectedCar(v.plate);
+                        setReserveCar(null);
+                      }
+                    }}
+                  >
+                    {v.plate}
+                  </span>
+                  <button
+                    style={{
+                      ...buttonStyle('reserve-' + v.id, '#ffc107'),
+                      marginTop: windowWidth < 768 ? '4px' : '0px',
+                      alignSelf: windowWidth < 768 ? 'flex-start' : 'auto',
+                    }}
+                    onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+                    onMouseLeave={() => setHoveredButton(null)}
+                    onClick={() => {
+                      setSelectedCar(v.plate);
+                      setReserveCar(v.plate);
+                    }}
+                  >
+                    จอง
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
@@ -417,11 +361,11 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
         />
         <MapContainer center={[500, 500]} zoom={0} crs={L.CRS.Simple} style={{ height: '100%', width: '100%' }}>
           <ImageOverlay url={mapImg} bounds={bounds} />
-          {/* Markers */}
           {districts.map((d) => {
             const carsHere = getCarsInDistrict(d.id);
             const position = carsHere.length > 0 ? [carsHere[0].x, carsHere[0].y] : [d.x, d.y];
-            const icon = carsHere.length > 0 ? vehicles.find((v) => v.plate === carsHere[0].plate)?.icon || flagLeafletIcon : flagLeafletIcon;
+            const icon =
+              carsHere.length > 0 ? vehicles.find((v) => v.plate === carsHere[0].plate)?.icon || flagLeafletIcon : flagLeafletIcon;
 
             return (
               <Marker key={d.id + (showAllStatus ? '-show' : '')} position={position} icon={icon} eventHandlers={{ click: () => handleDistrictClick(d) }}>
@@ -452,92 +396,38 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
 
       {/* Modals */}
       {showDriverForm && currentDistrict && selectedCar && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2000,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              padding: '20px',
-              borderRadius: '6px',
-              width: '300px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            }}
-          >
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '6px', width: '300px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h4>{reserveCar === selectedCar ? 'จองล่วงหน้า' : 'วางรถ'}</h4>
-            <p>
-              {selectedCar} → {currentDistrict.name}
-            </p>
+            <p>{selectedCar} → {currentDistrict.name}</p>
             <input
               type="text"
               value={driverInput}
               onChange={(e) => setDriverInput(e.target.value)}
               placeholder="ชื่อผู้ขับ"
-              style={{
-                width: '100%',
-                padding: '6px',
-                marginBottom: '10px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-              }}
+              style={{ width: '100%', padding: '6px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
             <div style={{ marginBottom: '10px' }}>
               <label>วันที่: </label>
               <input
                 type="date"
-                value={
-                  driverDate ||
-                  (reserveCar === selectedCar
-                    ? ''
-                    : new Date().toISOString().split('T')[0])
-                }
+                value={driverDate || (reserveCar === selectedCar ? '' : new Date().toISOString().split('T')[0])}
                 onChange={(e) => setDriverDate(e.target.value)}
                 disabled={reserveCar !== selectedCar}
-                style={{
-                  width: '100%',
-                  padding: '6px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                }}
+                style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button onClick={() => { setShowDriverForm(false); setReserveCar(null); setSelectedCar(null); }}>ยกเลิก</button>
               <button
                 onClick={() => {
-                  setShowDriverForm(false);
-                  setReserveCar(null);
-                  setSelectedCar(null);
-                }}
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={() => {
-                  // ถ้าเป็นการวางรถ (ไม่ใช่จอง) และวันที่ว่าง ให้กำหนดเป็นวันนี้
                   if (!driverDate && reserveCar !== selectedCar) {
                     setDriverDate(new Date().toISOString().split('T')[0]);
                   } else {
                     submitDriverForm();
                   }
                 }}
-                style={{
-                  background: '#007bff',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                }}
+                style={{ background: '#007bff', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px' }}
               >
                 บันทึก
               </button>
@@ -547,81 +437,36 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
       )}
 
       {actionMenu && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2000,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              width: '300px',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '300px', boxShadow: '0 8px 20px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <h3>มีรถอยู่แล้วที่ {actionMenu.district.name}</h3>
             <button
               style={buttonStyle('add-' + actionMenu.district.id, '#007bff')}
-              onMouseEnter={() =>
-                setHoveredButton('add-' + actionMenu.district.id)
-              }
+              onMouseEnter={() => setHoveredButton('add-' + actionMenu.district.id)}
               onMouseLeave={() => setHoveredButton(null)}
-              onClick={() => {
-                setCurrentDistrict(actionMenu.district);
-                setShowDriverForm(true);
-                setActionMenu(null);
-              }}
+              onClick={() => { setCurrentDistrict(actionMenu.district); setShowDriverForm(true); setActionMenu(null); }}
             >
               เพิ่มรถ
             </button>
             <button
-              style={buttonStyle(
-                'replace-' + actionMenu.district.id,
-                '#28a745'
-              )}
-              onMouseEnter={() =>
-                setHoveredButton('replace-' + actionMenu.district.id)
-              }
+              style={buttonStyle('replace-' + actionMenu.district.id, '#28a745')}
+              onMouseEnter={() => setHoveredButton('replace-' + actionMenu.district.id)}
               onMouseLeave={() => setHoveredButton(null)}
-              onClick={() => {
-                setReplaceModal(actionMenu.district);
-                setActionMenu(null);
-              }}
+              onClick={() => { setReplaceModal(actionMenu.district); setActionMenu(null); }}
             >
               แทนที่รถ
             </button>
             <button
               style={buttonStyle('remove-' + actionMenu.district.id, '#dc3545')}
-              onMouseEnter={() =>
-                setHoveredButton('remove-' + actionMenu.district.id)
-              }
+              onMouseEnter={() => setHoveredButton('remove-' + actionMenu.district.id)}
               onMouseLeave={() => setHoveredButton(null)}
-              onClick={() => {
-                setRemoveModal(actionMenu.district);
-                setActionMenu(null);
-              }}
+              onClick={() => { setRemoveModal(actionMenu.district); setActionMenu(null); }}
             >
               ถอดรถ
             </button>
             <button
               style={buttonStyle('cancel-' + actionMenu.district.id, '#6c757d')}
-              onMouseEnter={() =>
-                setHoveredButton('cancel-' + actionMenu.district.id)
-              }
+              onMouseEnter={() => setHoveredButton('cancel-' + actionMenu.district.id)}
               onMouseLeave={() => setHoveredButton(null)}
               onClick={() => setActionMenu(null)}
             >
@@ -632,32 +477,8 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
       )}
 
       {replaceModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2100,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              width: '300px',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 }}>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '300px', boxShadow: '0 8px 20px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <h3>แทนที่รถใน {replaceModal.name}</h3>
             {getCarsInDistrict(replaceModal.id).map((c, i) => (
               <button
@@ -683,32 +504,8 @@ const sidebarReserveButtonStyle = (car, baseColor) => ({
       )}
 
       {removeModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2100,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              padding: '20px',
-              borderRadius: '8px',
-              width: '300px',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 }}>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '300px', boxShadow: '0 8px 20px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <h3>ถอดรถจาก {removeModal.name}</h3>
             {getCarsInDistrict(removeModal.id).map((c, i) => (
               <button
