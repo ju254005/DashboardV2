@@ -69,6 +69,8 @@ export default function VehicleDashboardMap() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [popupMessage, setPopupMessage] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const [sidebarLocked, setSidebarLocked] = useState(true);
+
 
 
   useEffect(() => {
@@ -146,6 +148,12 @@ export default function VehicleDashboardMap() {
   }, []);
 
   const handleDistrictClick = (district) => {
+    if (!accessGranted || accessGranted === 'statusOnly') {
+      setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+      setShowPopup(true);
+      return;
+    }
+    
     const carsHere = getCarsInDistrict(district.id);
 
     if (selectedCar || reserveCar) {
@@ -317,74 +325,89 @@ export default function VehicleDashboardMap() {
 </div>
 
 
-            {vehicles.map((v) => {
-              const placed = isCarPlaced(v.plate);
-              const selected = selectedCar === v.plate;
-              const reserving = reserveCar === v.plate;
+{vehicles.map((v) => {
+  const placed = isCarPlaced(v.plate);
+  const selected = selectedCar === v.plate;
+  const reserving = reserveCar === v.plate;
 
-              return (
-                <div
-                  key={v.id}
-                  style={{
-                    display: 'flex',
-                    flexDirection: windowWidth < 768 ? 'column' : 'row',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px',
-                    marginBottom: '6px',
-                    borderRadius: '6px',
-                    background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
-                    color: selected ? '#fff' : '#000',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                  }}
-                >
-                  <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
-                  <span
-                    style={{
-                      cursor: placed ? 'not-allowed' : 'pointer',
-                      opacity: placed ? 0.5 : 1,
-                      borderRadius: '4px',
-                      padding: '2px 4px',
-                    }}
-                    onClick={() => {
-                      if (!accessGranted || accessGranted === 'statusOnly') {
-                        setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
-                        setShowPopup(true);
-                        return;
-                      }
-                      if (!placed) {
-                        setSelectedCar(v.plate);
-                        setReserveCar(null);
-                      }
-                    }}
-                    
-                  >
-                    {v.plate}
-                  </span>
-                  <button
-                    style={{
-                      ...buttonStyle('reserve-' + v.id, '#ffc107'),
-                      marginTop: windowWidth < 768 ? '4px' : '0px',
-                      alignSelf: windowWidth < 768 ? 'flex-start' : 'auto',
-                    }}
-                    onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
-                    onMouseLeave={() => setHoveredButton(null)}
-                    onClick={() => {
-                      if (!accessGranted || accessGranted === 'statusOnly') {
-                        setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
-                        setShowPopup(true);
-                        return;
-                      }
-                      setSelectedCar(v.plate);
-                      setReserveCar(v.plate);
-                    }}
-                    
-                  >
-                    จอง
-                  </button>
-                </div>
-              );
-            })}
+  return (
+    <div
+      key={v.id}
+      style={{
+        display: 'flex',
+        flexDirection: windowWidth < 768 ? 'column' : 'row',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '8px',
+        marginBottom: '6px',
+        borderRadius: '6px',
+        background: selected ? (reserving ? '#ffc107' : '#007bff') : '#fff',
+        color: selected ? '#fff' : '#000',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      }}
+    >
+      <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
+
+      {/* ปุ่มทะเบียนรถ */}
+      <span
+        style={{
+          cursor: (!accessGranted || accessGranted === 'statusOnly' || placed) ? 'not-allowed' : 'pointer',
+          opacity: (!accessGranted || placed) ? 0.5 : 1,
+          borderRadius: '4px',
+          padding: '2px 4px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          flexWrap: 'wrap'
+        }}
+        onClick={() => {
+          if (!accessGranted || accessGranted === 'statusOnly') {
+            setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+            setShowPopup(true);
+            return;
+          }
+          if (!placed) {
+            setSelectedCar(v.plate);
+            setReserveCar(null);
+          }
+        }}
+      >
+        {v.plate}
+        {sidebarLocked && <span style={{ fontSize: '12px', color: '#888' }}>🔒</span>}
+      </span>
+
+      {/* ปุ่มจอง */}
+      <button
+        style={{
+          ...buttonStyle('reserve-' + v.id, '#ffc107'),
+          marginTop: windowWidth < 768 ? '4px' : '0px',
+          alignSelf: windowWidth < 768 ? 'flex-start' : 'auto',
+          opacity: (!accessGranted || placed) ? 0.5 : 1,
+          cursor: (!accessGranted || accessGranted === 'statusOnly') ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          flexWrap: 'wrap'
+        }}
+        onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
+        onMouseLeave={() => setHoveredButton(null)}
+        onClick={() => {
+          if (!accessGranted || accessGranted === 'statusOnly') {
+            setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+            setShowPopup(true);
+            return;
+          }
+          setSelectedCar(v.plate);
+          setReserveCar(v.plate);
+        }}
+      >
+        จอง
+        {sidebarLocked && <span style={{ fontSize: '12px', color: '#888' }}>🔒</span>}
+      </button>
+    </div>
+  );
+})}
+
           </div>
         )}
       </div>
@@ -477,9 +500,10 @@ export default function VehicleDashboardMap() {
           ยืนยัน
         </button>
         <button
-          onClick={() => {
-            setAccessGranted('statusOnly'); // ผ่าน modal แต่ยังไม่สามารถวาง/จอง
-          }}
+  onClick={() => {
+    setAccessGranted('statusOnly');
+    setSidebarLocked(true); // ล็อค sidebar คงอยู่
+  }}
           style={{ flex: 1, padding: '6px', borderRadius: '4px', border: 'none', background: '#17a2b8', color: '#fff' }}
         >
           ดูสถานะรถ
@@ -509,7 +533,18 @@ export default function VehicleDashboardMap() {
               carsHere.length > 0 ? vehicles.find((v) => v.plate === carsHere[0].plate)?.icon || flagLeafletIcon : flagLeafletIcon;
 
             return (
-              <Marker key={d.id + (showAllStatus ? '-show' : '')} position={position} icon={icon} eventHandlers={{ click: () => handleDistrictClick(d) }}>
+              <Marker key={d.id + (showAllStatus ? '-show' : '')} position={position} icon={icon} eventHandlers={{
+                click: () => {
+                  if (!accessGranted || accessGranted === 'statusOnly') {
+                    setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+                    setShowPopup(true);
+                    return;
+                  }
+                  
+                  handleDistrictClick(d);
+                }
+              }}
+              >
                 <Tooltip direction="top" offset={[0, -10]} permanent={showAllStatus} opacity={1}>
                   <div style={{ minWidth: '120px', background: '#fff', padding: '2px 4px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                     <strong>{d.name}</strong>
