@@ -55,6 +55,7 @@ export default function VehicleDashboardMap() {
   const [reserveCar, setReserveCar] = useState(null);
   const [showDriverForm, setShowDriverForm] = useState(false);
   const [currentDistrict, setCurrentDistrict] = useState(null);
+  const [driverSelect, setDriverSelect] = useState("");
   const [driverInput, setDriverInput] = useState('');
   const [driverDate, setDriverDate] = useState('');
   const [showAllStatus, setShowAllStatus] = useState(false);
@@ -66,6 +67,9 @@ export default function VehicleDashboardMap() {
   const [passwordInput, setPasswordInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
+
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -275,16 +279,43 @@ export default function VehicleDashboardMap() {
           <div>
             <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>🚗 รายการรถ</h3>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-              <button
-                style={buttonStyle('showStatus', '#17a2b8')}
-                onMouseEnter={() => setHoveredButton('showStatus')}
-                onMouseLeave={() => setHoveredButton(null)}
-                onClick={() => setShowAllStatus(!showAllStatus)}
-              >
-                {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
-              </button>
-            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '10px', gap: '6px' }}>
+  {/* ปุ่มดูสถานะทั้งหมด */}
+  <button
+    style={buttonStyle('showStatus', '#17a2b8')}
+    onMouseEnter={() => setHoveredButton('showStatus')}
+    onMouseLeave={() => setHoveredButton(null)}
+    onClick={() => setShowAllStatus(!showAllStatus)}
+  >
+    {showAllStatus ? 'ซ่อนสถานะทั้งหมด' : 'ดูสถานะทั้งหมด'}
+  </button>
+
+  {/* ปุ่มดูสถานะผ่านแดชบอร์ด พร้อมไอคอน */}
+  <a
+    href="https://bgvehicledb.my.canva.site/" // <-- เปลี่ยนเป็นลิงก์จริงของคุณ
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '10px 14px',
+      borderRadius: '6px',
+      background: '#28a745',
+      color: '#fff',
+      textDecoration: 'none',
+      cursor: 'pointer',
+      textAlign: 'center',
+      flex: '1 1 auto',
+      minWidth: windowWidth < 768 ? '100%' : 'auto'
+    }}
+    onMouseEnter={() => setHoveredButton('dashboardLink')}
+    onMouseLeave={() => setHoveredButton(null)}
+  >
+    <span style={{ marginRight: '6px' }}>📊</span> ดูสถานะและสถิติผ่านแดชบอร์ด
+  </a>
+</div>
+
 
             {vehicles.map((v) => {
               const placed = isCarPlaced(v.plate);
@@ -316,11 +347,17 @@ export default function VehicleDashboardMap() {
                       padding: '2px 4px',
                     }}
                     onClick={() => {
+                      if (!accessGranted || accessGranted === 'statusOnly') {
+                        setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+                        setShowPopup(true);
+                        return;
+                      }
                       if (!placed) {
                         setSelectedCar(v.plate);
                         setReserveCar(null);
                       }
                     }}
+                    
                   >
                     {v.plate}
                   </span>
@@ -333,9 +370,15 @@ export default function VehicleDashboardMap() {
                     onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
                     onMouseLeave={() => setHoveredButton(null)}
                     onClick={() => {
+                      if (!accessGranted || accessGranted === 'statusOnly') {
+                        setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
+                        setShowPopup(true);
+                        return;
+                      }
                       setSelectedCar(v.plate);
                       setReserveCar(v.plate);
                     }}
+                    
                   >
                     จอง
                   </button>
@@ -348,6 +391,104 @@ export default function VehicleDashboardMap() {
 
       {/* Map */}
       <div style={{ flex: 1, position: 'relative' }}>
+      {showPopup && (
+  <div
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0,0,0,0.4)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 3000,
+    }}
+  >
+    <div
+      style={{
+        background: '#fff',
+        padding: '20px 30px',
+        borderRadius: '8px',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+        textAlign: 'center',
+        minWidth: '250px',
+      }}
+    >
+      <p style={{ marginBottom: '15px', fontSize: '16px' }}>{popupMessage}</p>
+      <button
+        style={{
+          padding: '6px 12px',
+          borderRadius: '4px',
+          border: 'none',
+          background: '#007bff',
+          color: '#fff',
+          cursor: 'pointer',
+        }}
+        onClick={() => setShowPopup(false)}
+      >
+        ปิด
+      </button>
+    </div>
+  </div>
+)}
+
+      {!accessGranted && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 3000,
+  }}>
+    <div style={{
+      background: '#fff',
+      padding: '20px',
+      borderRadius: '8px',
+      width: '300px',
+      textAlign: 'center'
+    }}>
+      <h3>กรุณากรอกคีย์เวิร์ด</h3>
+      <input
+        type="password"
+        value={passwordInput}
+        onChange={(e) => setPasswordInput(e.target.value)}
+        placeholder="คีย์เวิร์ด"
+        style={{ width: '100%', padding: '6px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+      />
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+        <button
+          onClick={() => {
+            if (passwordInput === '0015') { // คีย์เวิร์ดสำหรับวางรถ/จอง
+              setAccessGranted(true);
+            } else {
+              alert('คีย์เวิร์ดไม่ถูกต้อง');
+              setPasswordInput('');
+            }
+          }}
+          style={{ flex: 1, padding: '6px', borderRadius: '4px', border: 'none', background: '#007bff', color: '#fff' }}
+        >
+          ยืนยัน
+        </button>
+        <button
+          onClick={() => {
+            setAccessGranted('statusOnly'); // ผ่าน modal แต่ยังไม่สามารถวาง/จอง
+          }}
+          style={{ flex: 1, padding: '6px', borderRadius: '4px', border: 'none', background: '#17a2b8', color: '#fff' }}
+        >
+          ดูสถานะรถ
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
         <img
           src={logo}
           alt="โลโก้"
@@ -400,13 +541,69 @@ export default function VehicleDashboardMap() {
           <div style={{ background: '#fff', padding: '20px', borderRadius: '6px', width: '300px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h4>{reserveCar === selectedCar ? 'จองล่วงหน้า' : 'วางรถ'}</h4>
             <p>{selectedCar} → {currentDistrict.name}</p>
-            <input
-              type="text"
-              value={driverInput}
-              onChange={(e) => setDriverInput(e.target.value)}
-              placeholder="ชื่อผู้ขับ"
-              style={{ width: '100%', padding: '6px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
+
+           {/* Dropdown เลือกชื่อ driver */}
+           <label>ชื่อผู้ยืม:</label>
+<select
+  value={driverSelect}
+  onChange={(e) => {
+    const val = e.target.value;
+    setDriverSelect(val);
+    if (val !== "custom") {
+      setDriverInput(val); // กรณีเลือกชื่อจากลิสต์ → ใช้เลย
+    } else {
+      setDriverInput("");  // ถ้าเลือก custom → เคลียร์ไว้ให้พิมพ์เอง
+    }
+  }}
+  style={{
+    width: "100%",
+    padding: "6px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    marginBottom: "10px",
+  }}
+>
+  <option value="">-- เลือกผู้ยืม --</option>
+  <option value="นายเฉลิมเกียรติ แผนกิจเจริญ" style={{ color: "orange" }}>นายเฉลิมเกียรติ แผนกิจเจริญ</option>
+  <option value="นางสาววิมล มุ่งกลาง" style={{ color: "dodgerblue" }}>นางสาววิมล มุ่งกลาง</option>
+  <option value="นางกานดา เกตุพันธ์" style={{ color: "dodgerblue" }}>นางกานดา เกตุพันธ์</option>
+  <option value="นางสาวสุจิตตรา ประยงค์" style={{ color: "dodgerblue" }}>นางสาวสุจิตตรา ประยงค์</option>
+  <option value="นางสาวชุติมา โฮมวงศ์" style={{ color: "dodgerblue" }}>นางสาวชุติมา โฮมวงศ์</option>
+  <option value="นางสาวรัชดา โสระธิวา" style={{ color: "dodgerblue" }}>นางสาวรัชดา โสระธิวา</option>
+  <option value="นายณัชพล ต่างสากล" style={{ color: "dodgerblue" }}>นายณัชพล ต่างสากล</option>
+  <option value="นายเอกชัย ปาสาจะ" style={{ color: "dodgerblue" }}>นายเอกชัย ปาสาจะ</option>
+  <option value="นายสยัมภู แพงจันทร์" style={{ color: "green" }}>นายสยัมภู แพงจันทร์</option>
+  <option value="นายเชษฐา โคตรวันดี" style={{ color: "green" }}>นายเชษฐา โคตรวันดี</option>
+  <option value="นายธมกร มหธนคม" style={{ color: "green" }}>นายธมกร มหธนคม</option>
+  <option value="นางสาวจุฑารัตน์ คงมา" style={{ color: "green" }}>นางสาวจุฑารัตน์ คงมา</option>
+  <option value="นางสาวพชรพร บุญปก" style={{ color: "green" }}>นางสาวพชรพร บุญปก</option>
+  <option value="นางสาวชุติมา คลังชำนาญ" style={{ color: "gold" }}>นางสาวชุติมา คลังชำนาญ</option>
+  <option value="นายวิรุธ สมทอง" style={{ color: "gold" }}>นายวิรุธ สมทอง</option>
+  <option value="นางสาวปัญชุกา จันทรา" style={{ color: "gold" }}>นางสาวปัญชุกา จันทรา</option>
+  <option value="นางพัชรินทร์ ธรรมสาร" style={{ color: "navy" }}>นางพัชรินทร์ ธรรมสาร</option>
+  <option value="นางสาวธัญวรรณ จันปุ่ม" style={{ color: "navy" }}>นางสาวธัญวรรณ จันปุ่ม</option>
+  <option value="นางสาวพิชชาภา คำมุงคุณ" style={{ color: "navy" }}>นางสาวพิชชาภา คำมุงคุณ</option>
+  <option value="นายปิยพงษ์ โสภา" style={{ color: "navy" }}>นายปิยพงษ์ โสภา</option>
+  <option value="custom">กรอกเอง...</option>
+</select>
+
+{/* input ถ้าเลือก custom */}
+{driverSelect === "custom" && (
+  <input
+    type="text"
+    value={driverInput}
+    onChange={(e) => setDriverInput(e.target.value)}
+    placeholder="กรอกชื่อผู้ยืม"
+    style={{
+      width: "100%",
+      padding: "6px",
+      marginBottom: "10px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+    }}
+  />
+)}
+
             <div style={{ marginBottom: '10px' }}>
               <label>วันที่: </label>
               <input
