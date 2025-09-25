@@ -70,6 +70,8 @@ export default function VehicleDashboardMap() {
   const [popupMessage, setPopupMessage] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [sidebarLocked, setSidebarLocked] = useState(true);
+  const isLocked = !accessGranted || accessGranted === 'statusOnly';
+
 
 
 
@@ -347,21 +349,15 @@ export default function VehicleDashboardMap() {
       }}
     >
       <img src={v.icon.options.iconUrl} alt="car" style={{ width: '35px' }} />
-
-      {/* ปุ่มทะเบียนรถ */}
       <span
         style={{
-          cursor: (!accessGranted || accessGranted === 'statusOnly' || placed) ? 'not-allowed' : 'pointer',
-          opacity: (!accessGranted || placed) ? 0.5 : 1,
+          cursor: placed || isLocked ? 'not-allowed' : 'pointer',
+          opacity: placed || isLocked ? 0.5 : 1,
           borderRadius: '4px',
           padding: '2px 4px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          flexWrap: 'wrap'
         }}
         onClick={() => {
-          if (!accessGranted || accessGranted === 'statusOnly') {
+          if (isLocked) {
             setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
             setShowPopup(true);
             return;
@@ -372,27 +368,18 @@ export default function VehicleDashboardMap() {
           }
         }}
       >
-        {v.plate}
-        {sidebarLocked && <span style={{ fontSize: '12px', color: '#888' }}>🔒</span>}
+        {v.plate} {isLocked && "🔒"}
       </span>
-
-      {/* ปุ่มจอง */}
       <button
         style={{
           ...buttonStyle('reserve-' + v.id, '#ffc107'),
           marginTop: windowWidth < 768 ? '4px' : '0px',
           alignSelf: windowWidth < 768 ? 'flex-start' : 'auto',
-          opacity: (!accessGranted || placed) ? 0.5 : 1,
-          cursor: (!accessGranted || accessGranted === 'statusOnly') ? 'not-allowed' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          flexWrap: 'wrap'
         }}
         onMouseEnter={() => setHoveredButton('reserve-' + v.id)}
         onMouseLeave={() => setHoveredButton(null)}
         onClick={() => {
-          if (!accessGranted || accessGranted === 'statusOnly') {
+          if (isLocked) {
             setPopupMessage(!accessGranted ? 'กรุณากรอกคีย์เวิร์ดก่อนใช้งาน' : 'คีย์เวิร์ดไม่ถูกต้อง');
             setShowPopup(true);
             return;
@@ -401,12 +388,12 @@ export default function VehicleDashboardMap() {
           setReserveCar(v.plate);
         }}
       >
-        จอง
-        {sidebarLocked && <span style={{ fontSize: '12px', color: '#888' }}>🔒</span>}
+        จอง {isLocked && "🔒"}
       </button>
     </div>
   );
 })}
+
 
           </div>
         )}
