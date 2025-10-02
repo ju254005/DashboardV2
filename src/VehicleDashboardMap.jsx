@@ -302,7 +302,7 @@ export default function VehicleDashboardMap() {
 
   {/* ปุ่มดูสถานะผ่านแดชบอร์ด พร้อมไอคอน */}
   <a
-    href="https://bgvehicledb.my.canva.site/dag0bboq0os" // <-- เปลี่ยนเป็นลิงก์จริงของคุณ
+    href="https://bgvehicledb.my.canva.site/owildhunt" // <-- เปลี่ยนเป็นลิงก์จริงของคุณ
     target="_blank"
     rel="noopener noreferrer"
     style={{
@@ -751,3 +751,4 @@ export default function VehicleDashboardMap() {
     </div>
   );
 }
+
