@@ -599,7 +599,7 @@ export default function VehicleDashboardMap() {
   <option value="นายธมกร มหธนคม" style={{ color: "green" }}>นายธมกร มหธนคม</option>
   <option value="นางสาวจุฑารัตน์ คงมา" style={{ color: "green" }}>นางสาวจุฑารัตน์ คงมา</option>
   <option value="นางสาวพชรพร บุญปก" style={{ color: "green" }}>นางสาวพชรพร บุญปก</option>
-  <option value="นางสาวชุติมา คลังชำนาญ" style={{ color: "gold" }}>นางสาวชุติมา คลังชำนาญ</option>
+  <option value="นางชุติมา คลังชำนาญ" style={{ color: "gold" }}>นางชุติมา คลังชำนาญ</option>
   <option value="นายวิรุธ สมทอง" style={{ color: "gold" }}>นายวิรุธ สมทอง</option>
   <option value="นางสาวปัญชุกา จันทรา" style={{ color: "gold" }}>นางสาวปัญชุกา จันทรา</option>
   <option value="นางพัชรินทร์ ธรรมสาร" style={{ color: "navy" }}>นางพัชรินทร์ ธรรมสาร</option>
