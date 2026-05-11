@@ -302,7 +302,7 @@ export default function VehicleDashboardMap() {
 
   {/* ปุ่มดูสถานะผ่านแดชบอร์ด พร้อมไอคอน */}
   <a
-    href="https://bgvehicledb.my.canva.site/owildhunt" // <-- เปลี่ยนเป็นลิงก์จริงของคุณ
+    href="https://bgvehicledb.my.canva.site/owildhunt2" // <-- เปลี่ยนเป็นลิงก์จริงของคุณ
     target="_blank"
     rel="noopener noreferrer"
     style={{
@@ -594,18 +594,18 @@ export default function VehicleDashboardMap() {
   <option value="นางสาวรัชดา โสระธิวา" style={{ color: "dodgerblue" }}>นางสาวรัชดา โสระธิวา</option>
   <option value="นายณัชพล ต่างสากล" style={{ color: "dodgerblue" }}>นายณัชพล ต่างสากล</option>
   <option value="นายเอกชัย ปาสาจะ" style={{ color: "dodgerblue" }}>นายเอกชัย ปาสาจะ</option>
-  <option value="นายสยัมภู แพงจันทร์" style={{ color: "green" }}>นายสยัมภู แพงจันทร์</option>
-  <option value="นายเชษฐา โคตรวันดี" style={{ color: "green" }}>นายเชษฐา โคตรวันดี</option>
+  <option value="นางสาวเกษราภรณ์ บุญไชย" style={{ color: "green" }}>นางสาวเกษราภรณ์ บุญไชย</option>
+  <option value="นางสาวจันทรรัตน์ แช่มเชื้อ" style={{ color: "green" }}>นางสาวจันทรรัตน์ แช่มเชื้อ</option>
   <option value="นายธมกร มหธนคม" style={{ color: "green" }}>นายธมกร มหธนคม</option>
   <option value="นางสาวจุฑารัตน์ คงมา" style={{ color: "green" }}>นางสาวจุฑารัตน์ คงมา</option>
   <option value="นางสาวพชรพร บุญปก" style={{ color: "green" }}>นางสาวพชรพร บุญปก</option>
-  <option value="นางสาวชุติมา คลังชำนาญ" style={{ color: "gold" }}>นางสาวชุติมา คลังชำนาญ</option>
+  <option value="นายเชษฐา โคตรวันดี" style={{ color: "gold" }}>นายเชษฐา โคตรวันดี</option>
   <option value="นายวิรุธ สมทอง" style={{ color: "gold" }}>นายวิรุธ สมทอง</option>
   <option value="นางสาวปัญชุกา จันทรา" style={{ color: "gold" }}>นางสาวปัญชุกา จันทรา</option>
-  <option value="นางพัชรินทร์ ธรรมสาร" style={{ color: "navy" }}>นางพัชรินทร์ ธรรมสาร</option>
-  <option value="นางสาวธัญวรรณ จันปุ่ม" style={{ color: "navy" }}>นางสาวธัญวรรณ จันปุ่ม</option>
+  <option value="นายสมรรถกมล ลาน้ำเที่ยง" style={{ color: "navy" }}>นายสมรรถกมล ลาน้ำเที่ยง</option>
+  <option value="นางสาวรจนา จินดา" style={{ color: "navy" }}>นางสาวรจนา จินดา</option>
   <option value="นางสาวพิชชาภา คำมุงคุณ" style={{ color: "navy" }}>นางสาวพิชชาภา คำมุงคุณ</option>
-  <option value="นายปิยพงษ์ โสภา" style={{ color: "navy" }}>นายปิยพงษ์ โสภา</option>
+  <option value="นายพงส์ภทร ปู่บุตรชา" style={{ color: "navy" }}>นายพงส์ภทร ปู่บุตรชา</option>
   <option value="custom">กรอกเอง...</option>
 </select>
 
